@@ -10,13 +10,14 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import numpy as np 
 import screen_brightness_control as sbc 
 
+
 # Set the Video Screen Width and Height 
 cam_width , cam_height = 1280, 720 
 cap = cv2.VideoCapture(0)
 cap.set(3,cam_width)
 cap.set(4,cam_height)
 
-# Initialization 
+# Initialization
 prev_time = 0 
 current_time = 0
 bar = 400 
@@ -27,19 +28,22 @@ devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume = cast(interface, POINTER(IAudioEndpointVolume))
-# Get the Volume Range for the System 
+# Get the Volume Range for the System
 vol_range = volume.GetVolumeRange()
 min_volume = vol_range[0]
 max_volume = vol_range[1]
 
-# Toggle Between Controlling Brightness and Volume 
+# Toggle Between Controlling Brightness and Volume
 volume_toggle = False 
-
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+# out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 while True :
     success, img = cap.read()
     current_time = time.time()
-    # Flip the View to give mirror like result 
+    # Flip the View to give mirror like result
+    
     img = cv2.flip(img,1)
+    
     # Detect Hand
     img = hand_detector.find_hands(img,False)
     # Get the landmarks list 
@@ -85,17 +89,29 @@ while True :
             
     # Draw a frame for meter 
     cv2.rectangle(img,(50,150),(85,400),(255,0,0),3)
+    
     # Fill the meter 
     cv2.rectangle(img,(50,int(bar)),(85,400),(255,0,0),cv2.FILLED)
     
     # Calculate FPS
     fps = 1 / (current_time - prev_time)
     prev_time = current_time
+    
     # Display FPS 
-    cv2.putText(img,str(round(fps)),(10,50),cv2.FONT_HERSHEY_PLAIN,3,(255,0,255),2)
+    cv2.putText(img,f"FPS:{round(fps)}",(10,50),cv2.FONT_HERSHEY_PLAIN,3,(255,0,255),2)
+    
+#     hsv = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+#     out.write(img)
+    
     cv2.imshow("Video Here",img)
-    
-    cv2.waitKey(1)
-    
-    
+    if cv2.waitKey(1) & 0xFF == ord("s"):
+        break
+
+
+
+cap.release()
+out.release()
+
+cv2.destroyAllWindows()
+
     
